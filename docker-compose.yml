@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: policies-postgres
+    environment:
+      POSTGRES_DB: policies
+      POSTGRES_USER: policies
+      POSTGRES_PASSWORD: policies
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    container_name: policies-app
+    depends_on:
+      - postgres
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/policies
+      SPRING_DATASOURCE_USERNAME: policies
+      SPRING_DATASOURCE_PASSWORD: policies
+    ports:
+      - "8080:8080"
+    restart: on-failure
+
+volumes:
+  db-data:
