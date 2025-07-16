@@ -24,9 +24,13 @@ rules.
 - Policy status management
 - Database migration scripts (Flyway)
 - Clean separation of domain, application, and infrastructure layers
+- Clean Architecture validated by ArchUnit test
 - Integration and unit tests
 - Modern UI for insurance policies management (SPA)
 - Routing, pagination, creation, edition, and detail views in the SPA
+
+HATEOAS could have been implemented to enrich responses with hypermedia links, but this was not considered very relevant
+for this project due to the simplicity of the use cases and the limited added value.
 
 ## Deployment
 
