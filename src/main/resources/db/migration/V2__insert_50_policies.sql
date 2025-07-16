@@ -1,4 +1,4 @@
--- Insert 45 insurance policies (id auto-incremented)
+-- Insert 49 insurance policies (id auto-incremented)
 -- Only policies with expiry_date IS NULL will be returned by the API
 -- Last policy is expired (expiry_date NOT NULL)
 
@@ -50,7 +50,8 @@ VALUES ('Alpha Secure', 'ACTIVE', DATE '2025-01-02', DATE '2025-12-31', DATE '20
        ('Glint Secure', 'ACTIVE', DATE '2025-04-08', DATE '2025-12-31', DATE '2025-01-01', DATE '2025-01-01'),
        ('Hawk Protect', 'INACTIVE', DATE '2025-04-09', DATE '2025-12-31', DATE '2025-01-01', DATE '2025-01-01'),
        ('Indigo Shield', 'ACTIVE', DATE '2025-04-10', DATE '2025-12-31', DATE '2025-01-01', DATE '2025-01-01'),
-       ('Jewel Guard', 'INACTIVE', DATE '2025-04-11', DATE '2025-12-31', DATE '2025-01-01', DATE '2025-04-11');
+       ('Jewel Guard', 'INACTIVE', DATE '2025-04-11', DATE '2025-12-31', DATE '2025-01-01', DATE '2025-04-11'),
+       ('New Policy', 'ACTIVE', DATE '2025-05-12', DATE '2025-12-31', DATE '2025-05-01', DATE '2025-05-12');
 
 -- Insert an expired policy (should not be returned by the API)
 INSERT INTO insurance_policy (name, status, coverage_start_date, coverage_end_date, creation_date, update_date,
