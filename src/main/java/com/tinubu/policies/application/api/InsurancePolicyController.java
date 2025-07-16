@@ -7,7 +7,9 @@ import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,15 +26,22 @@ public class InsurancePolicyController {
             description = "Returns 200 OK with the list of policies paginated.")
     @GetMapping(produces = "application/vnd.tinubu.policies.v1+json")
     @ResponseStatus(org.springframework.http.HttpStatus.OK)
-    public List<InsurancePolicyDTO> listPoliciesV1(
+    public PaginatedResponse<InsurancePolicyDTO> listPoliciesV1(
             @Parameter(description = "Page number (0..N)", example = "0")
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size", example = "20")
             @RequestParam(defaultValue = "20") int size
     ) {
-        Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
-        Page<InsurancePolicyDTO> pageResult = service.listPolicies(pageable).map(dtoMapper::toDto);
-        return pageResult.getContent();
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id"));
+        Page<InsurancePolicy> pageResult = service.listPolicies(pageable);
+        List<InsurancePolicyDTO> content = pageResult.map(dtoMapper::toDto).getContent();
+        return new PaginatedResponse<>(
+                content,
+                pageResult.getNumber(),
+                pageResult.getSize(),
+                pageResult.getTotalElements(),
+                pageResult.getTotalPages()
+        );
     }
 
     @Operation(summary = "Create a new policy",
@@ -61,7 +70,7 @@ public class InsurancePolicyController {
     @PutMapping("/{id}")
     public ResponseEntity<InsurancePolicyDTO> updatePolicy(@PathVariable Integer id, @RequestBody @Valid InsurancePolicyDTO dto) {
         if (dto.getId() != null && !id.equals(dto.getId())) {
-            return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST).build();
+            throw new IllegalArgumentException("Path id and DTO id must be identical");
         }
         InsurancePolicy updated = service.updatePolicy(id, dtoMapper.toDomain(dto));
         return ResponseEntity.ok(dtoMapper.toDto(updated));

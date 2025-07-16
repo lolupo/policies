@@ -1,6 +1,8 @@
 package com.tinubu.policies.application.api;
 
 import com.tinubu.policies.domain.PolicyStatus;
+import lombok.Getter;
+import lombok.Setter;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,46 +45,39 @@ class InsurancePolicyControllerIntegrationTest {
     }
 
     @Test
-    void shouldListPolicies() {
+        // Test pagination: creates 15 policies, requests page 1 with size 10, and checks paginated response structure and content
+    void shouldListPoliciesWithPagination() {
+        // Arrange: create 15 policies
+        java.util.stream.IntStream.range(0, 15)
+                .mapToObj(i -> new InsurancePolicyDTO(null, "Policy " + i, PolicyStatus.ACTIVE, LocalDate.now(), LocalDate.now().plusYears(1), LocalDate.now(), LocalDate.now()))
+                .forEach(dto -> restTemplate.postForEntity("http://localhost:" + port + "/api/policies", dto, InsurancePolicyDTO.class));
+
         HttpHeaders headers = new HttpHeaders();
         headers.add("Accept", "application/vnd.tinubu.policies.v1+json");
         HttpEntity<Void> entity = new HttpEntity<>(headers);
-        ResponseEntity<String> response = restTemplate.exchange(
-                "http://localhost:" + port + "/api/policies",
+        int page = 1;
+        int size = 10;
+        String url = String.format("http://localhost:%d/api/policies?page=%d&size=%d", port, page, size);
+        ResponseEntity<PaginatedResponseTestDTO> response = restTemplate.exchange(
+                url,
                 HttpMethod.GET,
                 entity,
-                String.class
+                PaginatedResponseTestDTO.class
         );
+        // Assert: response structure and content
         assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
-        assertThat(response.getBody()).contains("\"id\"");
-        // The response is now a JSON array of DTOs, not a paged object with 'content'.
-        assertThat(response.getBody().trim()).startsWith("[");
+        PaginatedResponseTestDTO body = response.getBody();
+        assertThat(body).isNotNull();
+        assertThat(body.getContent()).isNotNull();
+        assertThat(body.getContent().size()).isEqualTo(size);
+        assertThat(body.getPage()).isEqualTo(page);
+        assertThat(body.getSize()).isEqualTo(size);
+        assertThat(body.getTotalElements()).isGreaterThanOrEqualTo(15);
+        assertThat(body.getTotalPages()).isGreaterThanOrEqualTo(2);
     }
 
     @Test
-    void shouldPaginatePolicies() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Accept", "application/vnd.tinubu.policies.v1+json");
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-        ResponseEntity<String> response = restTemplate.exchange(
-                "http://localhost:" + port + "/api/policies?page=1&size=5",
-                HttpMethod.GET,
-                entity,
-                String.class
-        );
-        assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
-        // The response is a JSON array, so we check for array structure and count elements
-        String body = response.getBody();
-        assertThat(body.trim()).startsWith("[");
-        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("\\{\\s*\\\"id\\\":").matcher(body);
-        int count = 0;
-        while (matcher.find()) {
-            count++;
-        }
-        assertThat(count).isEqualTo(5);
-    }
-
-    @Test
+        // Test policy creation: verifies that a new policy can be created and returned with correct data
     void shouldCreatePolicy() {
         // Use the all-args constructor for DTO creation
         var dto = new InsurancePolicyDTO(null, "Test Policy", PolicyStatus.ACTIVE, LocalDate.now(), LocalDate.now().plusYears(1), LocalDate.now(), LocalDate.now());
@@ -93,6 +88,7 @@ class InsurancePolicyControllerIntegrationTest {
     }
 
     @Test
+        // Test reading a policy by ID: creates a policy, retrieves it by ID, and checks returned data
     void shouldGetPolicyById() {
         var dto2 = new InsurancePolicyDTO(null, "GetById Policy", PolicyStatus.ACTIVE, LocalDate.now(), LocalDate.now().plusYears(1), LocalDate.now(), LocalDate.now());
         var createResponse = restTemplate.postForEntity("http://localhost:" + port + "/api/policies", dto2, InsurancePolicyDTO.class);
@@ -106,12 +102,14 @@ class InsurancePolicyControllerIntegrationTest {
     }
 
     @Test
+        // Test 404 error: tries to get a non-existent policy and expects a 4xx error
     void shouldReturnNotFoundForUnknownPolicy() {
         var response = restTemplate.getForEntity("http://localhost:" + port + "/api/policies/999999", InsurancePolicyDTO.class);
         assertThat(response.getStatusCode().is4xxClientError()).isTrue();
     }
 
     @Test
+        // Test policy update: creates a policy, updates its status, and verifies the update
     void shouldUpdatePolicy() {
         var dto3 = new InsurancePolicyDTO(null, "Update Policy", PolicyStatus.ACTIVE, LocalDate.now(), LocalDate.now().plusYears(1), LocalDate.now(), LocalDate.now());
         var createResponse2 = restTemplate.postForEntity("http://localhost:" + port + "/api/policies", dto3, InsurancePolicyDTO.class);
@@ -125,6 +123,7 @@ class InsurancePolicyControllerIntegrationTest {
     }
 
     @Test
+        // Test creationDate immutability: ensures creationDate is not changed on update
     void shouldNotUpdateCreationDateOnPolicyUpdate() {
         // Create a policy
         var dto = new InsurancePolicyDTO(null, "Test CreationDate", PolicyStatus.ACTIVE, LocalDate.now(), LocalDate.now().plusYears(1), LocalDate.now(), LocalDate.now());
@@ -148,6 +147,7 @@ class InsurancePolicyControllerIntegrationTest {
     }
 
     @Test
+        // Test validation error on creation: sends invalid DTO and expects RFC 7807 problem+json error
     void shouldReturnValidationErrorInProblemJsonFormat() {
         HttpHeaders headers = new HttpHeaders();
         headers.add("Accept", "application/vnd.tinubu.policies.v1+json");
@@ -174,6 +174,7 @@ class InsurancePolicyControllerIntegrationTest {
     }
 
     @Test
+        // Test IllegalArgumentException handling: sends invalid ID and expects RFC 7807 problem+json error
     void shouldReturnBadRequestInProblemJsonFormatForIllegalArgument() {
         // This test verifies that an IllegalArgumentException is handled and returns a 400 Bad Request in RFC 7807 problem+json format.
         HttpHeaders headers = new HttpHeaders();
@@ -200,6 +201,7 @@ class InsurancePolicyControllerIntegrationTest {
     }
 
     @Test
+        // Test validation error on update: sends invalid DTO and expects RFC 7807 problem+json error
     void shouldReturnValidationErrorInProblemJsonFormatForInvalidUpdate() {
         // This test verifies that a validation error (e.g. missing required field) returns a 400 Bad Request in RFC 7807 problem+json format.
         HttpHeaders headers = new HttpHeaders();
@@ -226,6 +228,7 @@ class InsurancePolicyControllerIntegrationTest {
     }
 
     @Test
+        // Test path/DTO ID mismatch: updates with mismatched IDs and expects RFC 7807 problem+json error
     void shouldReturnBadRequestWhenPathIdDiffersFromDtoId() {
         // Create a policy to get a valid id
         var dto = new InsurancePolicyDTO(null, "Test Path/DTO Id", PolicyStatus.ACTIVE, LocalDate.now(), LocalDate.now().plusYears(1), LocalDate.now(), LocalDate.now());
@@ -253,5 +256,15 @@ class InsurancePolicyControllerIntegrationTest {
         assertThat(response.getStatusCode().value()).isEqualTo(400);
         assertThat(response.getHeaders().getContentType()).hasToString("application/problem+json");
         assertThat(response.getBody()).contains("Path id and DTO id must be identical");
+    }
+
+    @Getter
+    @Setter
+    static class PaginatedResponseTestDTO {
+        private java.util.List<InsurancePolicyDTO> content;
+        private int page;
+        private int size;
+        private long totalElements;
+        private int totalPages;
     }
 }
