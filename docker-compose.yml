@@ -12,7 +12,7 @@ services:
     volumes:
       - db-data:/var/lib/postgresql/data
 
-  app:
+  backend:
     build: .
     container_name: policies-app
     depends_on:
@@ -23,6 +23,16 @@ services:
       SPRING_DATASOURCE_PASSWORD: policies
     ports:
       - "8080:8080"
+    restart: on-failure
+
+  frontend:
+    build:
+      context: ./spa
+    container_name: policies-frontend
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
     restart: on-failure
 
 volumes:
