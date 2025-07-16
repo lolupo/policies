@@ -2,14 +2,12 @@ package com.tinubu.policies.infrastructure.persistence;
 
 import com.tinubu.policies.domain.PolicyStatus;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
 
-@AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
@@ -41,6 +39,9 @@ public class InsurancePolicyEntity {
     @Setter
     @Column(name = "update_date", nullable = false)
     private LocalDate updateDate;
+
+    @Column(name = "expiry_date")
+    private LocalDate expiryDate = null;
 
     @PrePersist
     protected void onCreate() {

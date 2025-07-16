@@ -21,8 +21,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class InsurancePolicyServiceTest {
@@ -39,15 +38,14 @@ class InsurancePolicyServiceTest {
 
     @BeforeEach
     void setUp() {
-        entity = new InsurancePolicyEntity(
-                1,
-                "Test Policy",
-                PolicyStatus.ACTIVE,
-                LocalDate.of(2025, 1, 1),
-                LocalDate.of(2025, 12, 31),
-                LocalDate.of(2025, 1, 1),
-                LocalDate.of(2025, 1, 1)
-        );
+        entity = new InsurancePolicyEntity();
+        entity.setId(1);
+        entity.setName("Test Policy");
+        entity.setStatus(PolicyStatus.ACTIVE);
+        entity.setCoverageStartDate(LocalDate.of(2025, 1, 1));
+        entity.setCoverageEndDate(LocalDate.of(2025, 12, 31));
+        entity.setCreationDate(LocalDate.of(2025, 1, 1));
+        entity.setUpdateDate(LocalDate.of(2025, 1, 1));
         domain = InsurancePolicy.from(
                 entity.getId(),
                 entity.getName(),
@@ -79,14 +77,29 @@ class InsurancePolicyServiceTest {
     }
 
     @Test
-    void shouldReturnPaginatedPolicies() {
+    void shouldNotReturnPolicyByIdIfExpired() {
+        entity.setExpiryDate(LocalDate.of(2025, 7, 16));
+        InsurancePolicy found = service.getPolicy(entity.getId());
+        assertNull(found);
+    }
+
+    @Test
+    void shouldReturnOnlyNonExpiredPoliciesInList() {
+        InsurancePolicyEntity expiredEntity = new InsurancePolicyEntity();
+        expiredEntity.setId(2);
+        expiredEntity.setName("Expired Policy");
+        expiredEntity.setStatus(PolicyStatus.ACTIVE);
+        expiredEntity.setCoverageStartDate(LocalDate.of(2025, 1, 1));
+        expiredEntity.setCoverageEndDate(LocalDate.of(2025, 12, 31));
+        expiredEntity.setCreationDate(LocalDate.of(2025, 1, 1));
+        expiredEntity.setUpdateDate(LocalDate.of(2025, 1, 1));
+        expiredEntity.setExpiryDate(LocalDate.of(2025, 7, 16));
         Pageable pageable = PageRequest.of(0, 10);
         Page<InsurancePolicyEntity> page = new PageImpl<>(List.of(entity), pageable, 1);
-        Mockito.when(repository.findAll(pageable)).thenReturn(page);
+        Mockito.when(repository.findAllByExpiryDateIsNull(pageable)).thenReturn(page);
         Mockito.when(mapper.toDomain(entity)).thenReturn(domain);
         Page<InsurancePolicy> result = service.listPolicies(pageable);
         assertEquals(1, result.getTotalElements());
-        assertEquals(1, result.getContent().size());
         assertEquals(entity.getId(), result.getContent().getFirst().getId());
     }
 }

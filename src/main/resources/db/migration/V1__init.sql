@@ -16,5 +16,6 @@ CREATE TABLE IF NOT EXISTS insurance_policy
     coverage_start_date DATE NOT NULL,
     coverage_end_date DATE NOT NULL,
     creation_date DATE NOT NULL,
-    update_date DATE NOT NULL
+    update_date DATE NOT NULL,
+    expiry_date DATE
     );

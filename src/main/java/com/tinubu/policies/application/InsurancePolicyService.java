@@ -33,12 +33,12 @@ public class InsurancePolicyService {
 
     @Cacheable("policies")
     public Page<InsurancePolicy> listPolicies(Pageable pageable) {
-        return repository.findAll(pageable).map(mapper::toDomain);
+        return repository.findAllByExpiryDateIsNull(pageable).map(mapper::toDomain);
     }
 
     @CacheEvict(value = "policies", allEntries = true)
     public InsurancePolicy updatePolicy(Integer id, InsurancePolicy updated) {
-        return repository.findById(id)
+        return repository.findByIdAndExpiryDateIsNull(id)
                 .map(existing -> {
                     InsurancePolicyEntity entity = mapper.toEntity(updated);
                     entity.setId(id);
