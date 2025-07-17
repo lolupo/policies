@@ -13,36 +13,25 @@ extensibility, maintainability, and scalability, following modern software engin
 - **Database:** PostgreSQL
 - **Migrations:** Flyway
 
-## Generation
+## Features
+
+- CRUD operations for insurance policies using RESTful APIs
+- Modern UI for insurance policies management (SPA)
 
 The SPA was generated using **GitHub Copilot** in agent mode, following strict software engineering and architectural
 rules.
 
-## Features
-
-- CRUD operations for insurance policies
-- Policy status management
-- Database migration scripts (Flyway)
-- Clean separation of domain, application, and infrastructure layers
-- Clean Architecture validated by ArchUnit test
-- Integration and unit tests
-- Modern UI for insurance policies management (SPA)
-- Routing, pagination, creation, edition, and detail views in the SPA
-
 HATEOAS could have been implemented to enrich responses with hypermedia links, but this was not considered very relevant
 for this project due to the simplicity of the use cases and the limited added value.
-
-## Deployment
 
 ### Prerequisites
 
 - Java 21
 - Maven
 - Docker
-- PostgreSQL
 - React (for the frontend SPA)
 
-### Technical Stack
+## Technical Stack
 
 - **Spring Boot:** Robust framework for building production-ready Java applications.
 - **PostgreSQL:** Reliable and scalable relational database for policy data.
@@ -57,7 +46,7 @@ The application is deployed using Docker Compose, which orchestrates the followi
 - **Database Service:** Starts a PostgreSQL container for persistent storage of insurance policies.
 - **Migration Service:** Flyway migrations are executed automatically on application startup to ensure the database
   schema is up to date.
-- **SPA Service:** Runs the React frontend, accessible via `/policies/dashboard`.
+- **SPA Service:** Runs the React frontend
 
 To start the application and its dependencies, run:
 
@@ -65,8 +54,7 @@ To start the application and its dependencies, run:
   docker-compose up --build
 ```
 
-This command builds the Docker images and starts all necessary containers. The API will be accessible at
-`http://localhost:8080` and the SPA at `http://localhost/policies/dashboard` (the frontend port is **80**).
+This command builds the Docker images and starts all necessary containers.
 
 ## Usage
 
@@ -216,7 +204,6 @@ All error responses are consistent and designed for easy client-side parsing.
 - Error handling is tested by sending invalid data or parameters to trigger validation or illegal argument errors.
 - Only realistic error scenarios are tested. It is not possible to trigger generic exceptions (like
   NullPointerException) via the API due to validation constraints.
-- All code and documentation must be in English.
 - Run all tests with `mvn test` before committing changes. All tests must pass and there should be no compiler
   warnings.
 
