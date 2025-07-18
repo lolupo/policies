@@ -259,6 +259,32 @@ class InsurancePolicyControllerIntegrationTest {
         assertThat(response.getBody()).contains("Path id and DTO id must be identical");
     }
 
+    @Test
+        // Test policy creation with invalid enum value: sends a policy with an invalid status enum value and expects a 400 Bad Request with problem+json response
+    void shouldReturnBadRequestWithProblemJsonForInvalidEnumValue() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Accept", "application/vnd.tinubu.policies.v1+json");
+        headers.add("Content-Type", "application/json");
+        // Invalid enum value for status
+        String invalidJson = "{" +
+                "\"name\": \"Test Policy\"," +
+                "\"status\": \"unknown\"," +
+                "\"coverageStartDate\": \"2025-07-18\"," +
+                "\"coverageEndDate\": \"2026-07-18\"}";
+        HttpEntity<String> entity = new HttpEntity<>(invalidJson, headers);
+        ResponseEntity<String> response = restTemplate.exchange(
+                "http://localhost:" + port + "/api/policies",
+                HttpMethod.POST,
+                entity,
+                String.class
+        );
+        assertThat(response.getStatusCode().value()).isEqualTo(400);
+        assertThat(response.getHeaders().getContentType()).hasToString("application/problem+json");
+        assertThat(response.getBody()).contains("Invalid value");
+        assertThat(response.getBody()).contains("status");
+        assertThat(response.getBody()).contains("unknown");
+    }
+
     @Getter
     @Setter
     static class PaginatedResponseTestDTO {

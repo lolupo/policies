@@ -1,8 +1,10 @@
 package com.tinubu.policies.application.api;
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -42,6 +44,33 @@ public class ApiExceptionHandler {
                 "Bad Request",
                 HttpStatus.BAD_REQUEST.value(),
                 ex.getMessage(),
+                request.getDescription(false)
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.valueOf(PROBLEM_JSON))
+                .body(error);
+    }
+
+    private String extractDetail(HttpMessageNotReadableException ex) {
+        // Try to extract a more specific message for enum mapping errors
+        Throwable cause = ex.getCause();
+        if (cause instanceof InvalidFormatException ife) {
+            String fieldName = ife.getPathReference();
+            String invalidValue = String.valueOf(ife.getValue());
+            String targetType = ife.getTargetType().getSimpleName();
+            return String.format("Invalid value '%s' for field %s. Expected type: %s.", invalidValue, fieldName, targetType);
+        }
+        return "Malformed JSON request or invalid value. " + ex.getMessage();
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiErrorResponse> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, WebRequest request) {
+        String detail = extractDetail(ex);
+        ApiErrorResponse error = new ApiErrorResponse(
+                "https://example.com/problems/invalid-json",
+                "Invalid JSON or value",
+                HttpStatus.BAD_REQUEST.value(),
+                detail,
                 request.getDescription(false)
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
