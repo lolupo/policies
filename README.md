@@ -193,10 +193,15 @@ are:
   The response includes a detailed error message and all standard RFC 7807 fields.
 - **Illegal arguments (400 Bad Request):** Triggered when an invalid argument is passed to the API (e.g., negative ID).
   The response includes a "Bad Request" message in problem+json format.
+- **Mapping/Deserialization errors (400 Bad Request):** Triggered when the request body contains invalid values (e.g.,
+  an unknown enum value for a field). The response includes a clear message indicating which field and value caused the
+  error, always in RFC 7807 format.
 - **Generic exceptions (500 Internal Server Error):** Any unexpected error is returned as a 500 error in problem+json
   format. Note: due to validation, it is not possible to trigger a NullPointerException via the API.
 
-All error responses are consistent and designed for easy client-side parsing.
+All error responses are consistent, explicit, and designed for easy client-side parsing and debugging. The error handler
+ensures that even JSON mapping errors (such as invalid enum values) never result in a generic 500 error, but always
+return a clear 400 Bad Request with a precise explanation.
 
 ## Testing Strategy
 
