@@ -1,0 +1,20 @@
+meta {
+  name: Get policies
+  type: http
+  seq: 1
+}
+
+get {
+  url: http://localhost:8080/api/policies?page=1&size=10
+  body: none
+  auth: inherit
+}
+
+params:query {
+  page: 1
+  size: 10
+}
+
+headers {
+  Accept: application/vnd.tinubu.policies.v1+json
+}

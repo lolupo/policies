@@ -1,0 +1,25 @@
+meta {
+  name: Create policy
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:8080/api/policies
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/vnd.tinubu.policies.v1+json
+}
+
+body:json {
+  {
+    "name": "Test Policy",
+    "status": "ACTIVE",
+    "coverageStartDate": "2025-07-18",
+    "coverageEndDate": "2026-07-18"
+  }
+}

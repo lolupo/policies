@@ -1,0 +1,15 @@
+meta {
+  name: Get policie
+  type: http
+  seq: 1
+}
+
+get {
+  url: http://localhost:8080/api/policies/:id
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: 10
+}
